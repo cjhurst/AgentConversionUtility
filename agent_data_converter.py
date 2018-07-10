@@ -49,8 +49,6 @@ if __name__ == '__main__':
     args = parse_args()
     training_data = td.load_data(args.file)
 
-    print(training_data.as_json())
-
     data = {
                 "agentName": args.agent_name,
                 "description": "string",
@@ -180,4 +178,4 @@ if __name__ == '__main__':
             }
 
     response = requests.post('http://localhost:7500/agent/import', data=json.dumps(data))
-    print(response.text)
+    print(json.dumps(json.loads(response.text), indent=4))

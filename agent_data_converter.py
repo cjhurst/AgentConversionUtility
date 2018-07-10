@@ -38,16 +38,23 @@ import argparse
 # print(json.dumps(x3, indent = 4))
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Import a model in a supported format to Articulate.')
+    parser = argparse.ArgumentParser(description='Import an agent in a supported format to Articulate.')
     parser.add_argument('file', help='File to import')
     parser.add_argument('agent_name', help='Name to be assigned to the imported agent')
-    parser.add_argument('--host', help='Host running articulate if not local host.')
+    parser.add_argument('--host', help='Host running articulate if not localhost.')
     parser.add_argument('--language', help='Language of the agent')
     return parser.parse_args()
 
 if __name__ == '__main__':
+
     args = parse_args()
     training_data = td.load_data(args.file)
+
+    if (args.host):
+        host = args.host
+    else:
+        host = 'localhost'
+
 
     data = {
                 "agentName": args.agent_name,
@@ -177,5 +184,5 @@ if __name__ == '__main__':
                 ]
             }
 
-    response = requests.post('http://localhost:7500/agent/import', data=json.dumps(data))
-    print(json.dumps(json.loads(response.text), indent=4))
+    response = requests.post('http://' + 'host' + ':7500/agent/import', data=json.dumps(data))
+    #print(json.dumps(json.loads(response.text), indent=4))

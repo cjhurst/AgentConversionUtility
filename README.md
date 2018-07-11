@@ -33,6 +33,13 @@ $ python -m agent_data_converter './data/examples/rasa/demo-rasa.json' agent_smi
 
 ### Prerequisites
 
+Required libraries are included in the requirements.text file in the top level directory. To install the requirements, run the following:
+
+```
+pip install -r requirements.txt
+```
+
+
 To take advantage of this tool, you will need to have an instance of [Articulate](https://github.com/samtecspg/articulate) running either locally or on a server accessible from the localhost.
 
 

@@ -1,10 +1,10 @@
 # Articulate Agent Translator
 
-This is a python utility for translating and importing existing agents defined in Rasa NLU data format (as well as a couple others) to Samtec SPG Articulate conversational agent.
+This is a python utility for translating and importing existing agents defined in Rasa NLU data format (as well as a couple others) to Samtec SPG [Articulate](https://github.com/samtecspg/articulate) conversational agent.
 
 ## Getting Started
 
-This utility was developed with Python 3 and utilizes argparse. The following yields usage documentation:
+This utility was developed with Python 3 and utilizes Argparse. The following yields usage documentation:
 
 ```
 $ python -m agent_data_converter -h
@@ -25,11 +25,16 @@ optional arguments:
 
 ```
 
-Running the following command from the top level directory will run the script. 
+Running the following command from the top level directory will run the script. The file below is an example file which should succeed as long as connecting to Articulate suceeds and you don't already have an agent of the same name.
 
 ```
 $ python -m agent_data_converter './data/examples/rasa/demo-rasa.json' agent_smith
 ```
+
+### Prerequisites
+
+To take advantage of this tool, you will need to have an instance of [Articulate](https://github.com/samtecspg/articulate) running either locally or on a server accessible from the localhost.
+
 
 ## Acknowledgments
 

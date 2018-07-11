@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 "enableModelsPerDomain": True,
                 "model": "Why must this be a string?",
 
-                ## why must this be here what webhook applies globally?
+                ## why must this be here? what webhook applies globally?
                 "webhook": {
                     "webhookUrl": "string",
                     "webhookVerb": "GET",
@@ -192,6 +192,6 @@ if __name__ == '__main__':
 
     except Exception as e:
 
-        print(json.dumps({"error": "{}".format(e)}, indent = 4))
+        print(json.dumps({"error": "{}".format(e)}, indent=4))
 
 

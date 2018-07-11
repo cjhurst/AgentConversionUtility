@@ -25,7 +25,7 @@ optional arguments:
 
 ```
 
-Running the following command from the top level directory will run the script. The file below is an example file which should succeed as long as connecting to Articulate suceeds and you don't already have an agent of the same name.
+Running the following command from the top level directory will run the script. The file below is an example file which should succeed as long as connecting to Articulate succeeds and you don't already have an agent of the same name.
 
 ```
 $ python -m agent_data_converter './data/examples/rasa/demo-rasa.json' agent_smith

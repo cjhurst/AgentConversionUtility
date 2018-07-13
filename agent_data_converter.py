@@ -2,59 +2,39 @@ import training_data as td
 import json
 import requests
 import argparse
+from pathlib import Path
 
-## Demo of the Training_data object
+## Path to demo files.
 
 # rasajs = r'./data/examples/rasa/demo-rasa.json'
 # rasamd = r'./data/examples/rasa/demo-rasa.md'
 # wit = r'./data/examples/wit/demo-flights.json'
 #
-# rasajstd = td.load_data(rasajs)
-# rasamdtd = td.load_data(rasamd)
-# wittd = td.load_data(wit)
-# print("==============================")
-# print(rasajstd.entities)
-# print("==============================")
-# print(rasajstd.intents)
-# print("==============================")
-# x1 = [te.as_dict() for te in rasajstd.training_examples]
-# print(json.dumps(x1, indent = 4))
-#
-#
-# print("==============================")
-# print(rasamdtd.entities)
-# print("==============================")
-# print(rasamdtd.intents)
-# print("==============================")
-# x2 = [te.as_dict() for te in rasamdtd.training_examples]
-# print(json.dumps(x2, indent = 4))
-#
-# print("==============================")
-# print(wittd.entities)
-# print("==============================")
-# print(wittd.intents)
-# print("==============================")
-# x3 = [te.as_dict() for te in wittd.training_examples]
-# print(json.dumps(x3, indent = 4))
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Import an agent in a supported format to Articulate.')
+    parser = argparse.ArgumentParser(description='Convert an agent to articulate format.')
     parser.add_argument('file', help='File to import')
     parser.add_argument('agent_name', help='Name to be assigned to the imported agent')
-    parser.add_argument('--host', help='Host running Articulate if not localhost.')
+    parser.add_argument('--host', help='Host running Articulate')
+    parser.add_argument('-o', '--out', help='File to which to save the converted agent' )
     parser.add_argument('--language', help='Language of the agent')
     return parser.parse_args()
 
 if __name__ == '__main__':
 
     args = parse_args()
+
+    # initial arg processing
+
+    if args.out:
+        if Path(args.out).exists():
+            raise Exception(args.out + " already exists.")
+
+    # load file
+
     training_data = td.load_data(args.file)
 
-    if (args.host):
-        host = args.host
-    else:
-        host = 'localhost'
-
+    # fill out the rest call
 
     data = {
                 "agentName": args.agent_name,
@@ -184,14 +164,32 @@ if __name__ == '__main__':
                 ]
             }
 
-    try:
+    # Write out the agent to the file if that was requested.
 
-        response = requests.post('http://' + host + ':7500/agent/import', data=json.dumps(data))
-        # print(json.dumps(json.loads(response.text), indent=4))
-        print(response.status_code)
+    if args.out:
+        try:
+            with open(args.out, 'w') as f:
+                f.write(json.dumps(data, indent=4))
+            print("Successfully wrote agent to file: " + args.out )
 
-    except Exception as e:
+        except Exception as e:
+            print(json.dumps({"error": "{}".format(e)}, indent=4))
 
-        print(json.dumps({"error": "{}".format(e)}, indent=4))
+    # Try to import the agent to a running server if that was requested
+
+    if args.host:
+
+        try:
+            response = requests.post('http://' + args.host + ':7500/agent/import', data=json.dumps(data))
+            if response.status_code is 200:
+                print("Import to host '" + args.host + "' was successful")
+            else:
+                print("Import to host '" + args.host + "' was unsuccessful: \n " + response.text)
+
+        except Exception as e:
+
+            print(json.dumps({"error": "{}".format(e)}, indent=4))
+
+    print(json.dumps(data, indent=4))
 
 

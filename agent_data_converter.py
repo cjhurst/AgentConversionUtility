@@ -33,12 +33,12 @@ if __name__ == '__main__':
 
     # initial arg processing
 
-    # if args.out:
-    #     if Path(args.out).exists():
-    #         raise Exception(args.out + " already exists.")
-    # if args.language:
-    #     if args.language not in ('en', 'es', 'fr', 'de', 'pt'):
-    #         raise Exception(args.language + " is not a supported language")
+    if args.out:
+        if Path(args.out).exists():
+            raise Exception(args.out + " already exists.")
+    if args.language:
+        if args.language not in ('en', 'es', 'fr', 'de', 'pt'):
+            raise Exception(args.language + " is not a supported language")
 
     # load file
 
@@ -59,14 +59,15 @@ if __name__ == '__main__':
         intent_dict['intentName']= intent
 
         # if there are examples, create a dictionary entry
-        if len(training_data.intent_examples) > 0:
+        intent_examples = [ex for ex in training_data.intent_examples if ex.data['intent'] == intent]
+        if len(intent_examples) > 0:
             intent_dict['examples'] = []
 
         # iterate through the examples, output needs to be a list
         # each element in output is a dictionary containing entities list and userSays
         # 'example' in training data is a Message object which has relevant properties: 'data' and 'text'
 
-        for example in training_data.intent_examples:
+        for example in intent_examples:
 
             # get only the examples for this intent
             if example.data['intent'] == intent:
@@ -79,6 +80,8 @@ if __name__ == '__main__':
                     example_dict['entities'] = example.data['entities']
                     for each in example.data['entities']:
                         each['extractor'] = 'string'
+                else:
+                    example_dict['entities'] = []
 
                 #plug in the example to the dict
                 intent_dict['examples'].append(example_dict)
@@ -87,7 +90,8 @@ if __name__ == '__main__':
 
     def intents_list():
         intent_list = []
-        for intent in training_data.intents:
+
+        for intent in list(training_data.intents):
             intent_list.append(intent_dict(intent))
         return intent_list
 

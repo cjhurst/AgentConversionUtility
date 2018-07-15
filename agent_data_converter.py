@@ -3,6 +3,11 @@ import json
 import requests
 import argparse
 from pathlib import Path
+import uuid
+
+uuid.uuid4()
+import os
+print(os.getcwd())
 
 ## Path to demo files.
 
@@ -28,12 +33,12 @@ if __name__ == '__main__':
 
     # initial arg processing
 
-    if args.out:
-        if Path(args.out).exists():
-            raise Exception(args.out + " already exists.")
-    if args.language:
-        if args.language not in ('en', 'es', 'fr', 'de', 'pt'):
-            raise Exception(args.language + " is not a supported language")
+    # if args.out:
+    #     if Path(args.out).exists():
+    #         raise Exception(args.out + " already exists.")
+    # if args.language:
+    #     if args.language not in ('en', 'es', 'fr', 'de', 'pt'):
+    #         raise Exception(args.language + " is not a supported language")
 
     # load file
 
@@ -41,94 +46,192 @@ if __name__ == '__main__':
 
     # fill out the rest call
 
+    td_json = json.loads(training_data.as_json())
+
+    print(list(training_data.intents))
+
+    def intent_dict(intent):
+
+        # set defaults
+        intent_dict = {"useWebhook": False, "usePostFormat": False}
+
+        # populate the intent name
+        intent_dict['intentName']= intent
+
+        # if there are examples, create a dictionary entry
+        if len(training_data.intent_examples) > 0:
+            intent_dict['examples'] = []
+
+        # iterate through the examples, output needs to be a list
+        # each element in output is a dictionary containing entities list and userSays
+        # 'example' in training data is a Message object which has relevant properties: 'data' and 'text'
+
+        for example in training_data.intent_examples:
+
+            # get only the examples for this intent
+            if example.data['intent'] == intent:
+
+                example_dict = {}
+                example_dict['userSays'] = example.text
+
+                # needs to be a list, not all examples have entities
+                if 'entities' in example.data:
+                    example_dict['entities'] = example.data['entities']
+                    for each in example.data['entities']:
+                        each['extractor'] = 'string'
+
+                #plug in the example to the dict
+                intent_dict['examples'].append(example_dict)
+
+        return intent_dict
+
+    def intents_list():
+        intent_list = []
+        for intent in training_data.intents:
+            intent_list.append(intent_dict(intent))
+        return intent_list
+
+    settings = {
+        "domainClassifierPipeline": [
+            {
+                "name": "nlp_spacy"
+            },
+            {
+                "name": "tokenizer_spacy"
+            },
+            {
+                "name": "intent_featurizer_spacy"
+            },
+            {
+                "name": "intent_classifier_sklearn"
+            }
+        ],
+        "intentClassifierPipeline": [
+            {
+                "name": "nlp_spacy"
+            },
+            {
+                "name": "tokenizer_spacy"
+            },
+            {
+                "name": "intent_featurizer_spacy"
+            },
+            {
+                "name": "ner_crf"
+            },
+            {
+                "name": "ner_synonyms"
+            },
+            {
+                "name": "intent_classifier_sklearn"
+            },
+            {
+                "name": "ner_spacy"
+            }
+        ],
+        "entityClassifierPipeline": [
+            {
+                "name": "nlp_spacy"
+            },
+            {
+                "name": "tokenizer_spacy"
+            },
+            {
+                "name": "ner_crf"
+            },
+            {
+                "name": "ner_synonyms"
+            },
+            {
+                "name": "ner_spacy"
+            }
+        ],
+        "rasaURL": "http://rasa:5000",
+        "ducklingURL": "http://duckling:8000",
+        "ducklingDimension": [
+            "amount-of-money",
+            "distance",
+            "duration",
+            "email",
+            "number",
+            "ordinal",
+            "phone-number",
+            "quantity",
+            "temperature",
+            "time",
+            "url",
+            "volume"
+        ],
+        "spacyPretrainedEntities": [
+            "PERSON",
+            "NORP",
+            "FAC",
+            "ORG",
+            "GPE",
+            "LOC",
+            "PRODUCT",
+            "EVENT",
+            "WORK_OF_ART",
+            "LAW",
+            "LANGUAGE",
+            "DATE",
+            "TIME",
+            "PERCENT",
+            "MONEY",
+            "QUANTITY",
+            "ORDINAL",
+            "CARDINAL"
+        ]
+    }
+
     data =  {
     "status": "Out of Date",
     "usePostFormat": False,
     "description": args.description,
     "language": args.language,
-    "settings": {},
+    "settings": settings,
     "enableModelsPerDomain": True,
     "domainClassifierThreshold": 0.5,
     "extraTrainingData": False,
     "entities": [
         {
-            "uiColor": "string",
-            "regex": "string",
             "entityName": "string",
+            "uiColor": "string",
             "type": "learned",
+            "regex": "string",
             "examples": [
                 {
+                    "value": "string",
                     "synonyms": [
                         "string"
-                    ],
-                    "value": "string"
-                },
+                    ]
+                }
+            ]
+        },
+        {
+            "entityName": "string2",
+            "uiColor": "string",
+            "type": "learned",
+            "regex": "string",
+            "examples": [
                 {
+                    "value": "string",
                     "synonyms": [
-                        "string2"
-                    ],
-                    "value": "string2"
+                        "string"
+                    ]
                 }
             ]
         }
     ], ##You need to import this values form the training data
     "useWebhook": False,
-    "agentName": args.agent_name,
+    "agentName": "aaaaaa"+str(uuid.uuid4()),
     "domains": [ ##I haven't see other systems with the concept of domains so this is new
         {
             "status": "Out of Date", ##Same that agent status, "Out of Date" by default
-            "intents": [ ##I was expecting the intents of the file I sent to the conversion tool here
-                {
-                    "scenario": { ##Scenario is how the agent will respond if this scenario happens
-                        "slots": [ ##Systems like Dialogflow have this element, we should import that, I will explain the attributes of an slot
-                            {
-                                "isRequired": True, ##If the slots must be filled
-                                "textPrompts": [
-                                    "string" ##What the agent should ask if the slot is not filled. In example, if your order a pizza without toppings, then a value here will be "What toppings would you like"
-                                ],
-                                "slotName": "string", ##The slot name given by the user in other system
-                                "isList": True, ##If the slot could take the form of a list, like toppings: chicken, mushrooms, and ham
-                                "entity": "string" ##The entity that is going to fill this slot
-                            }
-                        ],
-                        "intentResponses": [
-                            "string" ##These are the responses from the agent, like "Cool, I will prepare your pizza", or, "Hi, how are you?"
-                        ],
-                        "scenarioName": "string string" ## By default use the same name that was given to the intent
-                    },
-                    "useWebhook": False,
-                    "intentName": "string", ##The intent given by the user in the input file
-                    "examples": [ ##These are the examples, basically the training data
-                        {
-                            "entities": [
-                                {
-                                    "start": 0,
-                                    "extractor": "string",
-                                    "end": 0,
-                                    "value": "string",
-                                    "entity": "string"
-                                }
-                            ],
-                            "userSays": "string"
-                        },
-                        {
-                            "entities": [
-                                {
-                                    "start": 0,
-                                    "extractor": "string",
-                                    "end": 0,
-                                    "value": "string",
-                                    "entity": "string"
-                                }
-                            ],
-                            "userSays": "string"
-                        }
-                    ],
-                    "usePostFormat": False
-                }
-            ],
+            "intents":intents_list(),
+
             "intentThreshold": 0.5,
-            "domainName": args.agent_name + "DefaultDomain",
+            "domainName": args.agent_name + "_DefaultDomain",
             "enabled": True,
             "extraTrainingData": False
         }
@@ -143,7 +246,7 @@ if __name__ == '__main__':
 
     if args.out:
         try:
-            with open(args.out, 'w') as f:
+            with open("DeleteMe/aaaaaa"+str(uuid.uuid4()), 'w') as f:
                 f.write(json.dumps(data, indent=4))
             print("\nSuccessfully wrote agent to file: " + args.out)
 

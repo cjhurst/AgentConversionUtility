@@ -7,7 +7,9 @@ import uuid
 
 uuid.uuid4()
 import os
+
 print(os.getcwd())
+
 
 ## Path to demo files.
 
@@ -23,9 +25,12 @@ def parse_args():
     parser.add_argument('description', help='A description of the agent')
     parser.add_argument('--host', help='Host running Articulate')
     parser.add_argument('-o', '--out', help='File to which to save the converted agent')
-    parser.add_argument('--language', help="Language of the agent, can be one of 'en', 'es', 'fr', 'de', 'pt'. Default is 'en'.", default='en')
+    parser.add_argument('--language',
+                        help="Language of the agent, can be one of 'en', 'es', 'fr', 'de', 'pt'. Default is 'en'.",
+                        default='en')
 
     return parser.parse_args()
+
 
 if __name__ == '__main__':
 
@@ -44,11 +49,7 @@ if __name__ == '__main__':
 
     training_data = td.load_data(args.file)
 
-    # fill out the rest call
-
-    td_json = json.loads(training_data.as_json())
-
-    print(list(training_data.intents))
+    # functions to populate JSON REST elements from training data.
 
     def intent_dict(intent):
 
@@ -56,7 +57,7 @@ if __name__ == '__main__':
         intent_dict = {"useWebhook": False, "usePostFormat": False}
 
         # populate the intent name
-        intent_dict['intentName']= intent
+        intent_dict['intentName'] = intent
 
         # if there are examples, create a dictionary entry
         intent_examples = [ex for ex in training_data.intent_examples if ex.data['intent'] == intent]
@@ -83,17 +84,39 @@ if __name__ == '__main__':
                 else:
                     example_dict['entities'] = []
 
-                #plug in the example to the dict
+                # plug in the example to the dict
                 intent_dict['examples'].append(example_dict)
 
         return intent_dict
 
-    def intents_list():
+    def intents_list(): # return the list for inclusion in JSON structure
         intent_list = []
 
         for intent in list(training_data.intents):
             intent_list.append(intent_dict(intent))
         return intent_list
+
+    def entity_dict(entity):
+        entity_dict = {   "entityName": entity,
+                            "uiColor": "string",
+                            "type": "learned",
+                            "examples":[]
+         }
+
+        for example in training_data.entity_examples:
+            if example.data['entities'] == entity:
+                entity_dict['examples'].append(example)
+
+        return entity_dict
+
+    def entities_list():
+
+        entities_list = []
+
+        for entity in list(training_data.entities):
+            entities_list.append(entity_dict(entity))
+
+        return  entities_list##training_data.entity_examples.data.entities
 
     settings = {
         "domainClassifierPipeline": [
@@ -188,75 +211,48 @@ if __name__ == '__main__':
         ]
     }
 
-    data =  {
-    "status": "Out of Date",
-    "usePostFormat": False,
-    "description": args.description,
-    "language": args.language,
-    "settings": settings,
-    "enableModelsPerDomain": True,
-    "domainClassifierThreshold": 0.5,
-    "extraTrainingData": False,
-    "entities": [
-        {
-            "entityName": "string",
-            "uiColor": "string",
-            "type": "learned",
-            "regex": "string",
-            "examples": [
-                {
-                    "value": "string",
-                    "synonyms": [
-                        "string"
-                    ]
-                }
-            ]
-        },
-        {
-            "entityName": "string2",
-            "uiColor": "string",
-            "type": "learned",
-            "regex": "string",
-            "examples": [
-                {
-                    "value": "string",
-                    "synonyms": [
-                        "string"
-                    ]
-                }
-            ]
-        }
-    ], ##You need to import this values form the training data
-    "useWebhook": False,
-    "agentName": "aaaaaa"+str(uuid.uuid4()),
-    "domains": [ ##I haven't see other systems with the concept of domains so this is new
-        {
-            "status": "Out of Date", ##Same that agent status, "Out of Date" by default
-            "intents":intents_list(),
+    # populate JSON data object
 
-            "intentThreshold": 0.5,
-            "domainName": args.agent_name + "_DefaultDomain",
-            "enabled": True,
-            "extraTrainingData": False
-        }
-    ],
-    "timezone": "UTC",
-  "fallbackResponses": [
-      "I didn't understand that. Can you say it in a different way?"
-  ]
-}
+    data = {
+        "status": "Out of Date",
+        "usePostFormat": False,
+        "description": args.description,
+        "language": args.language,
+        "settings": settings,
+        "enableModelsPerDomain": True,
+        "domainClassifierThreshold": 0.5,
+        "extraTrainingData": False,
+        "entities": entities_list(),
+        "useWebhook": False,
+        "agentName": "aaaaaa" + str(uuid.uuid4()),
+        "domains": [  ##I haven't see other systems with the concept of domains so this is new
+            {
+                "status": "Out of Date",  ##Same that agent status, "Out of Date" by default
+                "intents": intents_list(),
+
+                "intentThreshold": 0.5,
+                "domainName": args.agent_name + "_DefaultDomain",
+                "enabled": True,
+                "extraTrainingData": False
+            }
+        ],
+        "timezone": "UTC",
+        "fallbackResponses": [
+            "I didn't understand that. Can you say it in a different way?"
+        ]
+    }
 
     # Write out the agent to the file if that was requested.
 
     if args.out:
         try:
-            with open("DeleteMe/aaaaaa"+str(uuid.uuid4()), 'w') as f:
+            with open("DeleteMe/aaaaaa" + str(uuid.uuid4()), 'w') as f:
                 f.write(json.dumps(data, indent=4))
             print("\nSuccessfully wrote agent to file: " + args.out)
 
         except Exception as e:
             print("\nWriting to file " + args.out + " was unsuccessful.")
-            print("\n"+json.dumps({"error": "{}".format(e)}, indent=4))
+            print("\n" + json.dumps({"error": "{}".format(e)}, indent=4))
 
     # Try to import the agent to a running server if that was requested
 
@@ -271,8 +267,6 @@ if __name__ == '__main__':
 
         except Exception as e:
 
-            print("\n"+json.dumps({"error": "{}".format(e)}, indent=4))
+            print("\n" + json.dumps({"error": "{}".format(e)}, indent=4))
 
     print(json.dumps(data, indent=4))
-
-

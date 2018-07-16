@@ -97,20 +97,13 @@ if __name__ == '__main__':
         return intent_list
 
     def entity_dict(entity):
-        entity_dict = {   "entityName": entity,
-                            "uiColor": "string",
-                            "type": "learned",
-                            "examples":[]
-         }
 
-        print ("XAMPLE +++++++++++++++++++++++++++\n")
-        print(training_data.entity_examples)
+        entity_dict = {"entityName": entity, "uiColor": "string", "type": "learned", "examples": []}
 
         for example in training_data.entity_examples:
-            print ("XAMPLE2 +++++++++++++++++++++++++++\n")
-            print(example.data['entities'])
+
             for each in example.data['entities']:
-                if each['entity']== entity:
+                if each['entity'] == entity:
                     entity_dict['examples'].append({'value': each['value']})
 
         return entity_dict

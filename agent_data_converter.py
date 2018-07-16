@@ -103,9 +103,15 @@ if __name__ == '__main__':
                             "examples":[]
          }
 
+        print ("XAMPLE +++++++++++++++++++++++++++\n")
+        print(training_data.entity_examples)
+
         for example in training_data.entity_examples:
-            if example.data['entities'] == entity:
-                entity_dict['examples'].append(example)
+            print ("XAMPLE2 +++++++++++++++++++++++++++\n")
+            print(example.data['entities'])
+            for each in example.data['entities']:
+                if each['entity']== entity:
+                    entity_dict['examples'].append({'value': each['value']})
 
         return entity_dict
 

@@ -1,5 +1,5 @@
 jsonschema==2.6.0
-requests==2.18.4
+requests>=2.20.0
 simplejson==3.13.2
 typing==3.6.2
 six==1.11.0
